@@ -13,8 +13,8 @@ st.title("🏥 Central de Monitoramento e Previsão de Deterioração")
 # O 'ttl=60' faz o sistema recarregar o Google Drive a cada 60 segundos
 @st.cache_data(ttl=60) 
 def carregar_dados():
-    # ⚠️ SUBSTITUA O TEXTO ABAIXO PELO ID DO SEU ARQUIVO NO GOOGLE DRIVE ⚠️ 
-    file_id = '1NFhEE5XHMkzaKGSibBMWMe9Mv9YalQUW'
+    # ⚠️ SUBSTITUA O TEXTO ABAIXO PELO ID DO SEU ARQUIVO NO GOOGLE DRIVE ⚠️  
+    file_id = '1mP9QputMdhGPmUrboKzgWnaPiWFl3XlM'
     
     url_drive = f'https://drive.google.com/uc?id={file_id}&export=download'
     
