@@ -2,45 +2,41 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from pathlib import Path
 
 # 1. Configuração da Página Web
 st.set_page_config(page_title="Central de Triagem IA", layout="wide")
 st.title("🏥 Central de Monitoramento e Previsão de Deterioração")
 
-# 2. Carregar os Dados 
-@st.cache_data
+# =====================================================================
+# 2. CARREGAR DADOS DA NUVEM (GOOGLE DRIVE)
+# =====================================================================
+# O 'ttl=60' faz o sistema recarregar o Google Drive a cada 60 segundos
+@st.cache_data(ttl=60) 
 def carregar_dados():
-    pasta_raiz = Path(r'C:\Users\Constat\Desktop\Pacientes')
-    arquivos_csv = list(pasta_raiz.rglob('*_previsibilidade.csv'))
+    # ⚠️ SUBSTITUA O TEXTO ABAIXO PELO ID DO SEU ARQUIVO NO GOOGLE DRIVE ⚠️ 
+    file_id = '1NFhEE5XHMkzaKGSibBMWMe9Mv9YalQUW'
     
-    if not arquivos_csv:
-        return pd.DataFrame() 
-        
-    lista_dataframes = []
+    url_drive = f'https://drive.google.com/uc?id={file_id}&export=download'
     
-    for arquivo in arquivos_csv:
+    try:
+        df_final = pd.read_csv(url_drive, sep=';', encoding='utf-8-sig')
+    except:
         try:
-            df_temp = pd.read_csv(arquivo, sep=';', encoding='utf-8-sig')
-            lista_dataframes.append(df_temp)
+            df_final = pd.read_csv(url_drive, sep=',', encoding='utf-8-sig')
         except:
-            try:
-                df_temp = pd.read_csv(arquivo, sep=',', encoding='utf-8-sig')
-                lista_dataframes.append(df_temp)
-            except:
-                pass 
-                
-    df_final = pd.concat(lista_dataframes, ignore_index=True)
+            return pd.DataFrame() # Retorna vazio se der erro crítico
+            
+    # Converte a coluna de data
     df_final['DATA_REFERENCIA'] = pd.to_datetime(df_final['DATA_REFERENCIA'], format='%d/%m/%Y %H:%M')
     return df_final
 
 try:
     df = carregar_dados()
     if df.empty:
-        st.warning("Nenhum arquivo '_previsibilidade.csv' encontrado na pasta informada.")
+        st.warning("Não foi possível carregar o arquivo CSV do Google Drive. Verifique se o link está público e se o ID está correto.")
         st.stop()
 except Exception as e:
-    st.error(f"Erro ao processar os arquivos CSV. Detalhe: {e}")
+    st.error(f"Erro de conexão com o banco de dados. Detalhe: {e}")
     st.stop()
 
 # =====================================================================
