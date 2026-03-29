@@ -129,7 +129,7 @@ if nr_selecionado == "🌐 Todos os Pacientes":
             "DATA_REFERENCIA": st.column_config.DatetimeColumn("Última Avaliação", format="DD/MM/YYYY HH:mm"),
             "Risco_Max": st.column_config.ProgressColumn("Maior Risco IA (%)", format="%.1f", min_value=0, max_value=100),
             "Horizonte": st.column_config.TextColumn("Horizonte Crítico"),
-            "NEWS_Status": st.column_config.TextColumn("Score NEWS"),
+            "NEWS_Status": st.column_config.TextColumn("Mediana NEWS"),
             "IndiceChoque": st.column_config.NumberColumn("Índice Choque", format="%.2f"),
             "IndiceRox": st.column_config.NumberColumn("Índice ROX", format="%.2f"),
             "UltimoSPO2": st.column_config.NumberColumn("SpO2 (%)")
@@ -178,7 +178,7 @@ Data/Hora da Avaliação: {data_selecionada}
 Paciente NR: {nr_selecionado}
 
 [SINAIS VITAIS]
-- NEWS Score: {int(linha_atual['Mediana_News'])}
+- Mediana NEWS Score: {int(linha_atual['Mediana_News'])}
 - SpO2: {linha_atual['UltimoSPO2']}%
 - Freq. Respiratória: {linha_atual['UltimoFR']} rpm
 - Freq. Cardíaca: {linha_atual['UltimoFC']} bpm
@@ -208,18 +208,46 @@ Conduta:
 
     col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Mediana NEWS", int(linha_atual['Mediana_News']))
-    col2.metric("Ultima SpO2", f"{linha_atual['UltimoSPO2']}%")
+    
+    # Adicionado o delta com a coluna Spo2_Tendencia
+    col2.metric("Ultima SpO2", f"{linha_atual['UltimoSPO2']}%", delta=f"{linha_atual['Spo2_Tendencia']} (Tendência)")
+    
     col3.metric("Última Freq. Respiratória", f"{linha_atual['UltimoFR']} rpm", delta=f"{linha_atual['DeltaFR6h']} (Delta últ. 6h)", delta_color="inverse")
     col4.metric("Última Freq. Cardíaca", f"{linha_atual['UltimoFC']} bpm", delta=f"{linha_atual['DeltaFC6h']} (Delta últ. 6h)", delta_color="inverse")
     col5.metric("Pressão Sistólica", f"{linha_atual['UltimoPA']} mmHg", delta=f"{linha_atual['DeltaPA6h']} (Delta últ. 6h)", delta_color="inverse")
 
     st.markdown("<br>", unsafe_allow_html=True) 
     col6, col7, col8, col9, col10 = st.columns(5)
-    col6.metric("Temperatura", f"{linha_atual['UltimoTemp']} °C")
-    col7.metric("Índice de Choque", f"{linha_atual['IndiceChoque']}")
-    col8.metric("Índice ROX", f"{linha_atual['IndiceRox']}")
-    col9.metric("Aceleração NEWS", f"{linha_atual['NewsAceleracao']}")
-    col10.metric("Score Fragilidade", f"{linha_atual['Score_FragilididadeClinica']}")
+    col6.metric("Últ. Temperatura", f"{linha_atual['UltimoTemp']} °C")
+    col7.metric("Índice de Choque", (f"{linha_atual['IndiceChoque']}"),
+    help="Cálculo: Frequência Cardíaca / Pressão Sistólica. Valores acima de 0.8 a 1.0 indicam alto risco de choque hemodinâmico oculto.")
+    col8.metric("Índice ROX", (f"{linha_atual['IndiceRox']}"),
+    help="Mede a capacidade respiratória:  > 4.88 Boa resposta ao Oxigenio | Entre 3.85 e 4.88 Zona de Atenção | < 3.88 Alto Risco de Falha Respiratória.")
+    col9.metric("Mediana Freq. Resp.", f"{linha_atual['Mediana_FR']}")
+    col10.metric("Score Fragilidade", (f"{linha_atual['Score_FragilididadeClinica']}"), 
+    help="""Mede o quão “frágil” o paciente já é antes de piorar. Variáveis:
+- Acamado (Peso 3)
+- Consciência Sustentada (quanto pior a cognição basal → maior fragilidade)
+- IdadeNormalizada 0-1 (Peso 2.5)
+- Comorbidades: DNG, IC e CA (Peso 2) | DM (Peso 1.5) | HAS (Peso 0.5)
+
+SCORE TOTAL: 0 - 2 Baixa Fragilidadde | 2 - 5 Moderada | 5 - 8 Alta | Maior ou igual a 8 Alta Fragilidade
+""")
+
+    st.markdown("<br>", unsafe_allow_html=True) 
+    
+    # --- TERCEIRA LINHA (NOVOS DADOS DE TENDÊNCIA) ---
+    col11, col12, col13, col14, col15 = st.columns(5)
+    # Adicionei "h" imaginando que o tempo é em horas e "rpm" na FR. Se for diferente no seu banco, é só apagar a letra!
+    col15.metric("Aceleração NEWS", f"{linha_atual['NewsAceleracao']}")
+    col11.metric("Tendência NEWS", (f"{linha_atual['News_Tendencia']}"),
+    help="Direção para onde o quadro clínico geral está caminhando (melhorando:-1, piorando:1 ou estável:0).")             
+    col12.metric("Tempo NEWS Alto", (f"{linha_atual['Tempo_NewsAlto']} h"),
+    help="Quantidade total de horas consecutivas que este paciente permaneceu na zona de perigo do protocolo NEWS. News maior ou igual a 6") 
+    col13.metric("Volatilidade NEWS", (f"{linha_atual['News_Volatilidade']}"),
+    help="É o desvio padrão dos valores do NEWS. 0 - Sem piora |  1 - 2 Algumas pioras | Maior ou igual a 3 Piora Sustentada/instabilidade")            
+    col14.metric("Piora Sustentada NEWS (Degrau)", (f"{linha_atual['News_PioraSustentadaDegrau']}"),
+    help="Conta quantos aumentos consecutivos aconteceram no NEWS. 0 - 1 Estável |  1 - 2 Oscilação Moderada | > 2 Alta instabilidade") 
 
     # Sistema de Alertas
     st.markdown("---")
@@ -360,7 +388,7 @@ Conduta:
     fig_news.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Mediana_News'], mode='lines+markers', name='NEWS (Mediana)', line=dict(color='purple', width=3)), secondary_y=False)
     fig_news.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoSPO2'], mode='lines+markers', name='SpO2 (%)', line=dict(color='cyan', dash='dash', width=3)), secondary_y=True)
     fig_news.update_layout(hovermode="x unified", height=400)
-    fig_news.update_yaxes(title_text="Score NEWS", secondary_y=False, color="purple")
+    fig_news.update_yaxes(title_text="Mediana Score NEWS", secondary_y=False, color="purple")
     fig_news.update_yaxes(title_text="SpO2 (%)", secondary_y=True, color="cyan")
     fig_news.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
     st.plotly_chart(fig_news, use_container_width=True)
