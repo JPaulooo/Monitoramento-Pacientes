@@ -9,11 +9,11 @@ st.set_page_config(page_title="Central de Triagem IA", layout="wide")
 st.title("🏥 Central de Monitoramento e Previsão de Deterioração")
 
 # =====================================================================
-# 2. CARREGAR DADOS DA NUVEM (GOOGLE DRIVE)
+# 2. CARREGAR DADOS DA NUVEM (GOOGLE DRIVE)   
 # =====================================================================
 @st.cache_data(ttl=60) 
 def carregar_dados():
-    file_id = '1mP9QputMdhGPmUrboKzgWnaPiWFl3XlM'
+    file_id = '1GHl4ACKit8D3RzFKyVlJGXNvyzj76SMo'
     url_drive = f'https://drive.google.com/uc?id={file_id}&export=download'
     
     try:
