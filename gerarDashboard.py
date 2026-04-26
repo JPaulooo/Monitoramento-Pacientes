@@ -13,7 +13,7 @@ st.title("🏥 Central de Monitoramento e Previsão de Deterioração")
 # =====================================================================
 @st.cache_data(ttl=60) 
 def carregar_dados():
-    file_id = '12BM5bg4pTinNJTo6gs6qTKet-K84Ig90'
+    file_id = '1dPoWECBeH3h4IfMIi-1-A-EVZui6oB1I'
     url_drive = f'https://drive.google.com/uc?id={file_id}&export=download'
     
     try:
