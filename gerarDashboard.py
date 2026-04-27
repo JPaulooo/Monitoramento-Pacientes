@@ -370,6 +370,22 @@ SCORE TOTAL: 0 - 2 Baixa Fragilidadde | 2 - 5 Moderada | 5 - 8 Alta | Maior ou i
     fig_vitais.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
     st.plotly_chart(fig_vitais, use_container_width=True)
 
+    # --- NOVO GRÁFICO ACRESCENTADO AQUI ---
+    st.markdown("#### 2. Evolução do Score NEWS Pontual (Bruto)")
+    fig_news_pontual = go.Figure()
+    # Usamos uma cor forte e distinta, como magenta, para o NEWS bruto
+    fig_news_pontual.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Ultimo_News'], mode='lines+markers', name='NEWS Pontual', line=dict(color='magenta', width=3)))
+    
+    # Adicionamos as linhas de referência do protocolo NEWS
+    fig_news_pontual.add_hline(y=5, line_dash="dot", line_color="orange", annotation_text="Atenção (NEWS >= 5)")
+    fig_news_pontual.add_hline(y=7, line_dash="dot", line_color="red", annotation_text="Crítico (NEWS >= 7)")
+    
+    fig_news_pontual.update_layout(yaxis_title="Score NEWS", hovermode="x unified", height=300) # Altura menor, similar à temperatura
+    fig_news_pontual.update_yaxes(range=[0, 20]) # Define a amplitude do NEWS (tipicamente vai de 0 a ~20)
+    fig_news_pontual.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
+    st.plotly_chart(fig_news_pontual, use_container_width=True)
+    # -------------------------------------
+    
     st.markdown("#### 2. Curva Térmica (Temperatura)")
     fig_temp = go.Figure()
     fig_temp.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoTemp'], mode='lines+markers', name='Temperatura (°C)', line=dict(color='darkorange', width=3)))
