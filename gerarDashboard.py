@@ -374,7 +374,7 @@ SCORE TOTAL: 0 - 2 Baixa Fragilidadde | 2 - 5 Moderada | 5 - 8 Alta | Maior ou i
     st.markdown("#### 2. Evolução do Score NEWS Pontual (Bruto)")
     fig_news_pontual = go.Figure()
     # Usamos uma cor forte e distinta, como magenta, para o NEWS bruto
-    fig_news_pontual.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Ultimo_News'], mode='lines+markers', name='NEWS Pontual', line=dict(color='magenta', width=3)))
+    fig_news_pontual.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['ultimo_News'], mode='lines+markers', name='NEWS Pontual', line=dict(color='magenta', width=3)))
     
     # Adicionamos as linhas de referência do protocolo NEWS
     fig_news_pontual.add_hline(y=5, line_dash="dot", line_color="orange", annotation_text="Atenção (NEWS >= 5)")
