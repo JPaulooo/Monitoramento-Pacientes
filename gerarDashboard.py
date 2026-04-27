@@ -343,7 +343,7 @@ SCORE TOTAL: 0 - 2 Baixa Fragilidadde | 2 - 5 Moderada | 5 - 8 Alta | Maior ou i
     st.subheader("📈 Trajetória Clínica e Sinais Vitais (Interativo)")
 
     total_registos = len(df_paciente)
-    tamanho_janela = 15 
+    tamanho_janela = 45 
 
     if total_registos > tamanho_janela:
         st.info(f"O paciente tem **{total_registos}** registros. Utilize a barra abaixo para viajar no tempo (exibindo 15 pontos de cada vez).")
