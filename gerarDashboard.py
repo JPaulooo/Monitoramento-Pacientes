@@ -164,7 +164,7 @@ if nr_selecionado == "Todos os Pacientes":
 # =====================================================================
 else:
     # --- NOVO: BOTÃO DE VOLTAR ---
-    if st.button("⬅️ Voltar para Visão Geral"):
+    if st.button("Voltar para Visão Geral"):
         st.session_state['paciente_selecionado'] = "Todos os Pacientes"
         st.rerun()
         
@@ -212,7 +212,7 @@ Conduta:
     )
 
     # Painel Clínico
-    st.subheader(f"Status do Paciente NR: {nr_selecionado} (Avaliação de: {data_selecionada})")
+    st.subheader(f"Status do Paciente NR: {nr_selecionado} (Último Registro: {data_selecionada})")
 
     col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Mediana NEWS", f"⠀{int(linha_atual['Mediana_News'])}")
