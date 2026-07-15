@@ -6,7 +6,7 @@ import time
 
 # 1. Configuração da Página Web
 st.set_page_config(page_title="Central de Triagem IA", layout="wide")
-st.title("🏥 Central de Monitoramento e Previsão de Deterioração")
+st.title("Central de Monitoramento e Previsão de Deterioração")
 
 # =====================================================================
 # 2. CARREGAR DADOS DA NUVEM (GOOGLE DRIVE) https://drive.google.com/file/d/1dPoWECBeH3h4IfMIi-1-A-EVZui6oB1I/view?usp=sharing
@@ -40,11 +40,11 @@ except Exception as e:
 # 3. MENU LATERAL E LÓGICA DE NAVEGAÇÃO (COM MEMÓRIA DE CLIQUE)
 # =====================================================================
 nrs_disponiveis = df['NR'].unique().tolist()
-nrs_disponiveis.insert(0, "🌐 Todos os Pacientes")
+nrs_disponiveis.insert(0, "Todos os Pacientes")
 
 # Inicia a memória de navegação
 if 'paciente_selecionado' not in st.session_state:
-    st.session_state['paciente_selecionado'] = "🌐 Todos os Pacientes"
+    st.session_state['paciente_selecionado'] = "Todos os Pacientes"
 
 # Inicia uma memória para a tabela não travar o clique
 if 'chave_tabela' not in st.session_state:
@@ -69,8 +69,8 @@ st.session_state['paciente_selecionado'] = nr_selecionado
 # =====================================================================
 # MODO 1: VISÃO GERAL DA UTI (TRIAGEM INTELIGENTE)
 # =====================================================================
-if nr_selecionado == "🌐 Todos os Pacientes":
-    st.subheader("🌐 Visão Geral dos Pacientes - Triagem por IA")
+if nr_selecionado == "Todos os Pacientes":
+    st.subheader("Visão Geral dos Pacientes - Triagem por IA")
     
     # Pega a última avaliação cronológica de CADA paciente
     df_visao_geral = df.sort_values('DATA_REFERENCIA').drop_duplicates(subset=['NR'], keep='last').copy()
@@ -165,7 +165,7 @@ if nr_selecionado == "🌐 Todos os Pacientes":
 else:
     # --- NOVO: BOTÃO DE VOLTAR ---
     if st.button("⬅️ Voltar para Visão Geral"):
-        st.session_state['paciente_selecionado'] = "🌐 Todos os Pacientes"
+        st.session_state['paciente_selecionado'] = "Todos os Pacientes"
         st.rerun()
         
     df_paciente = df[df['NR'] == nr_selecionado].sort_values('DATA_REFERENCIA').copy()
