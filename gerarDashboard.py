@@ -395,27 +395,7 @@ SCORE TOTAL: 0 - 2 Baixa Fragilidadde | 2 - 5 Moderada | 5 - 8 Alta | Maior ou i
     fig_temp.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
     st.plotly_chart(fig_temp, use_container_width=True)
 
-    st.markdown("#### 3. Índices Preditivos: Choque Hemodinâmico vs Risco de Intubação (ROX)")
-    fig_indices = make_subplots(specs=[[{"secondary_y": True}]])
-    fig_indices.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['IndiceChoque'], mode='lines+markers', name='Índice de Choque', line=dict(color='red', width=3)), secondary_y=False)
-    fig_indices.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['IndiceRox'], mode='lines+markers', name='Índice ROX', line=dict(color='green', dash='dash', width=3)), secondary_y=True)
-    fig_indices.update_layout(hovermode="x unified", height=400)
-    fig_indices.update_yaxes(title_text="Índice de Choque", secondary_y=False, color="red")
-    fig_indices.update_yaxes(title_text="Índice ROX", secondary_y=True, color="green")
-    fig_indices.add_hline(y=1.0, line_dash="dot", line_color="darkred", annotation_text="Risco Choque (>1.0)", secondary_y=False)
-    fig_indices.add_hline(y=4.88, line_dash="dot", line_color="darkgreen", annotation_text="Risco Intubação ROX (<4.88)", secondary_y=True)
-    fig_indices.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
-    st.plotly_chart(fig_indices, use_container_width=True)
-
-    st.markdown("#### 4. Risco Clínico Protocolar vs Saturação de Oxigênio")
-    fig_news = make_subplots(specs=[[{"secondary_y": True}]])
-    fig_news.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Mediana_News'], mode='lines+markers', name='NEWS (Mediana)', line=dict(color='purple', width=3)), secondary_y=False)
-    fig_news.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoSPO2'], mode='lines+markers', name='SpO2 (%)', line=dict(color='cyan', dash='dash', width=3)), secondary_y=True)
-    fig_news.update_layout(hovermode="x unified", height=400)
-    fig_news.update_yaxes(title_text="Mediana Score NEWS", secondary_y=False, color="purple")
-    fig_news.update_yaxes(title_text="SpO2 (%)", secondary_y=True, color="cyan")
-    fig_news.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
-    st.plotly_chart(fig_news, use_container_width=True)
+    
 
     st.markdown("#### 5. Linha do Tempo de Risco (IA)")
     fig_linha = go.Figure()
