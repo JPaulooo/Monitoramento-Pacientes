@@ -361,14 +361,18 @@ SCORE TOTAL: 0 - 2 Baixa Fragilidadde | 2 - 5 Moderada | 5 - 8 Alta | Maior ou i
     # =====================================================================
     # GRÁFICOS INTERATIVOS
     # =====================================================================
-    st.markdown("#### 1. Evolução dos Sinais Vitais Essenciais")
-    fig_vitais = go.Figure()
-    fig_vitais.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoFC'], mode='lines+markers', name='Frequência Cardíaca (bpm)', line=dict(color='red')))
-    fig_vitais.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoPA'], mode='lines+markers', name='Pressão Sistólica (mmHg)', line=dict(color='blue')))
-    fig_vitais.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoFR'], mode='lines+markers', name='Frequência Respiratória (rpm)', line=dict(color='green')))
-    fig_vitais.update_layout(yaxis_title="Valores", hovermode="x unified", height=400)
-    fig_vitais.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
-    st.plotly_chart(fig_vitais, use_container_width=True)
+
+    st.markdown("#### 1. Linha do Tempo de Risco (IA)")
+    fig_linha = go.Figure()
+    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_6h_(%)'], mode='lines+markers', name='Risco 6h', line=dict(color='firebrick', width=2)))
+    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_12h_(%)'], mode='lines+markers', name='Risco 12h', line=dict(color='orange', width=2)))
+    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_18h_(%)'], mode='lines+markers', name='Risco 18h', line=dict(color='teal', width=2)))
+    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_24h_(%)'], mode='lines+markers', name='Risco 24h', line=dict(color='gold', width=2)))
+    fig_linha.add_hline(y=50, line_dash="dot", line_color="gray", annotation_text="Atenção (50%)")
+    fig_linha.add_hline(y=70, line_dash="dot", line_color="red", annotation_text="Crítico (70%)")
+    fig_linha.update_layout(yaxis_title="Probabilidade (%)", hovermode="x unified", height=400, yaxis=dict(range=[-5, 105]))
+    fig_linha.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
+    st.plotly_chart(fig_linha, use_container_width=True)
 
     # --- NOVO GRÁFICO ACRESCENTADO AQUI ---
     st.markdown("#### 2. Evolução do Score NEWS Pontual (Bruto)")
@@ -386,7 +390,16 @@ SCORE TOTAL: 0 - 2 Baixa Fragilidadde | 2 - 5 Moderada | 5 - 8 Alta | Maior ou i
     st.plotly_chart(fig_news_pontual, use_container_width=True)
     # -------------------------------------
     
-    st.markdown("#### 2. Curva Térmica (Temperatura)")
+    st.markdown("#### 3. Evolução dos Sinais Vitais Essenciais")
+    fig_vitais = go.Figure()
+    fig_vitais.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoFC'], mode='lines+markers', name='Frequência Cardíaca (bpm)', line=dict(color='red')))
+    fig_vitais.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoPA'], mode='lines+markers', name='Pressão Sistólica (mmHg)', line=dict(color='blue')))
+    fig_vitais.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoFR'], mode='lines+markers', name='Frequência Respiratória (rpm)', line=dict(color='green')))
+    fig_vitais.update_layout(yaxis_title="Valores", hovermode="x unified", height=400)
+    fig_vitais.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
+    st.plotly_chart(fig_vitais, use_container_width=True)
+
+    st.markdown("#### 4. Curva Térmica (Temperatura)")
     fig_temp = go.Figure()
     fig_temp.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoTemp'], mode='lines+markers', name='Temperatura (°C)', line=dict(color='darkorange', width=3)))
     fig_temp.add_hline(y=37.8, line_dash="dot", line_color="red", annotation_text="Pico Febril (37.8°C)")
@@ -397,14 +410,4 @@ SCORE TOTAL: 0 - 2 Baixa Fragilidadde | 2 - 5 Moderada | 5 - 8 Alta | Maior ou i
 
     
 
-    st.markdown("#### 5. Linha do Tempo de Risco (IA)")
-    fig_linha = go.Figure()
-    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_6h_(%)'], mode='lines+markers', name='Risco 6h', line=dict(color='firebrick', width=2)))
-    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_12h_(%)'], mode='lines+markers', name='Risco 12h', line=dict(color='orange', width=2)))
-    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_18h_(%)'], mode='lines+markers', name='Risco 18h', line=dict(color='teal', width=2)))
-    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_24h_(%)'], mode='lines+markers', name='Risco 24h', line=dict(color='gold', width=2)))
-    fig_linha.add_hline(y=50, line_dash="dot", line_color="gray", annotation_text="Atenção (50%)")
-    fig_linha.add_hline(y=70, line_dash="dot", line_color="red", annotation_text="Crítico (70%)")
-    fig_linha.update_layout(yaxis_title="Probabilidade (%)", hovermode="x unified", height=400, yaxis=dict(range=[-5, 105]))
-    fig_linha.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
-    st.plotly_chart(fig_linha, use_container_width=True)
+    
