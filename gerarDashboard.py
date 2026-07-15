@@ -214,6 +214,20 @@ Conduta:
     # Painel Clínico
     st.subheader(f"Status do Paciente NR: {nr_selecionado} (Último Registro: {data_selecionada})")
 
+
+
+    st.markdown("#### Linha do Tempo de Risco (IA)")
+    fig_linha = go.Figure()
+    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_6h_(%)'], mode='lines+markers', name='Risco 6h', line=dict(color='firebrick', width=2)))
+    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_12h_(%)'], mode='lines+markers', name='Risco 12h', line=dict(color='orange', width=2)))
+    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_18h_(%)'], mode='lines+markers', name='Risco 18h', line=dict(color='teal', width=2)))
+    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_24h_(%)'], mode='lines+markers', name='Risco 24h', line=dict(color='gold', width=2)))
+    fig_linha.add_hline(y=50, line_dash="dot", line_color="gray", annotation_text="Atenção (50%)")
+    fig_linha.add_hline(y=70, line_dash="dot", line_color="red", annotation_text="Crítico (70%)")
+    fig_linha.update_layout(yaxis_title="Probabilidade (%)", hovermode="x unified", height=400, yaxis=dict(range=[-5, 105]))
+    fig_linha.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
+    st.plotly_chart(fig_linha, use_container_width=True)
+
     col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Mediana NEWS", f"⠀{int(linha_atual['Mediana_News'])}")
     
