@@ -70,7 +70,7 @@ st.session_state['paciente_selecionado'] = nr_selecionado
 # MODO 1: VISÃO GERAL DA UTI (TRIAGEM INTELIGENTE)
 # =====================================================================
 if nr_selecionado == "Todos os Pacientes":
-    st.subheader("Visão Geral dos Pacientes - Triagem por IA")
+    st.subheader("Visão Geral dos Pacientes")
     
     # Pega a última avaliação cronológica de CADA paciente
     df_visao_geral = df.sort_values('DATA_REFERENCIA').drop_duplicates(subset=['NR'], keep='last').copy()
