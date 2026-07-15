@@ -1,15 +1,18 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import time 
 
-# 1. Configuração da Página Web
-st.set_page_config(page_title="Central de Triagem IA", layout="wide")
-st.title("Central de Monitoramento e Previsão de Deterioração")
+# =====================================================================
+# 1. CONFIGURAÇÃO DA PÁGINA WEB
+# =====================================================================
+st.set_page_config(page_title="Central de Triagem IA", layout="wide", initial_sidebar_state="expanded")
+st.title("🏥 Central de Monitoramento e Previsão de Deterioração")
 
 # =====================================================================
-# 2. CARREGAR DADOS DA NUVEM (GOOGLE DRIVE) https://drive.google.com/file/d/1dPoWECBeH3h4IfMIi-1-A-EVZui6oB1I/view?usp=sharing
+# 2. CARREGAR DADOS DA NUVEM (GOOGLE DRIVE)
 # =====================================================================
 @st.cache_data(ttl=60) 
 def carregar_dados():
@@ -57,6 +60,7 @@ except:
     idx_atual = 0
 
 # O menu lateral agora navega por INDEX, evitando erro de recarregamento
+st.sidebar.markdown("### 🧭 Navegação")
 nr_selecionado = st.sidebar.selectbox(
     "Selecione a Visão ou o Paciente (NR):", 
     nrs_disponiveis,
@@ -70,7 +74,7 @@ st.session_state['paciente_selecionado'] = nr_selecionado
 # MODO 1: VISÃO GERAL DA UTI (TRIAGEM INTELIGENTE)
 # =====================================================================
 if nr_selecionado == "Todos os Pacientes":
-    st.subheader("Visão Geral dos Pacientes")
+    st.subheader("🌐 Visão Geral dos Pacientes - Triagem por IA")
     
     # Pega a última avaliação cronológica de CADA paciente
     df_visao_geral = df.sort_values('DATA_REFERENCIA').drop_duplicates(subset=['NR'], keep='last').copy()
@@ -110,10 +114,8 @@ if nr_selecionado == "Todos os Pacientes":
     criticos = len(df_tabela[df_tabela['Risco_Max'] >= 70])
     atencao = len(df_tabela[(df_tabela['Risco_Max'] >= 50) & (df_tabela['Risco_Max'] < 70)])
     
-    
     st.markdown("---")
     c1, c2, c3, c4 = st.columns(4)
-    # Coloquei o caractere invisível antes do total_leitos
     c1.metric("🛌 Leitos Monitorados", f"⠀⠀{total_leitos}")
     c2.metric("🚨 Risco Crítico (>70%)", f"⠀⠀{criticos}")
     c3.metric("⚠️ Em Atenção (>50%)", f"⠀⠀{atencao}")
@@ -122,25 +124,32 @@ if nr_selecionado == "Todos os Pacientes":
     
     st.markdown("**Selecione a linha de um paciente abaixo para abrir o prontuário detalhado:**")
 
-    # --- MELHORIA: ALINHAMENTO CENTRALIZADO EM TODAS AS COLUNAS ---
+    # --- CSS PARA CENTRALIZAR O DATAFRAME ---
+    st.markdown("""
+        <style>
+        [data-testid="stDataFrame"] th { text-align: center !important; }
+        [data-testid="stDataFrame"] td { text-align: center !important; }
+        </style>
+        """, unsafe_allow_html=True)
+
     evento_clique = st.dataframe(
         df_tabela,
         key=st.session_state['chave_tabela'], 
         column_config={
-            "NR": st.column_config.TextColumn("Nr Atend.", width=10),
-            "DATA_REFERENCIA": st.column_config.DatetimeColumn("Última Avaliação", format="DD/MM/YYYY HH:mm", width=30),
-            "Risco_Max": st.column_config.ProgressColumn("Maior Risco IA (%)", format="%.1f", min_value=0, max_value=100, width=300),
-            "Horizonte": st.column_config.TextColumn("Horizonte Crítico", width=25),
-            "NEWS_Status": st.column_config.TextColumn("Mediana NEWS", width=20),
-            "IndiceChoque": st.column_config.NumberColumn("Índice Choque", format="%.2f", width=20),
-            "IndiceRox": st.column_config.NumberColumn("Índice ROX", format="%.2f", width=20),
-            "UltimoSPO2": st.column_config.NumberColumn("SpO2 (%)",width=20),
-            "UltimoFR": st.column_config.TextColumn("FR (rpm)", width=20),
-            "DeltaFR6h": st.column_config.TextColumn("DeltaFR", width=20),
-            "UltimoFC": st.column_config.TextColumn("FC (bpm)", width=20),
-            "DeltaFC6h": st.column_config.TextColumn("DeltaFC", width=20),
-            "UltimoPA": st.column_config.TextColumn("PA Sistólica", width=20),
-            "DeltaPA6h": st.column_config.TextColumn("DeltaPA", width=20)
+            "NR": st.column_config.TextColumn("Nr Atend."),
+            "DATA_REFERENCIA": st.column_config.DatetimeColumn("Última Avaliação", format="DD/MM/YYYY HH:mm"),
+            "Risco_Max": st.column_config.ProgressColumn("Maior Risco IA (%)", format="%.1f", min_value=0, max_value=100),
+            "Horizonte": st.column_config.TextColumn("Horizonte Crítico"),
+            "NEWS_Status": st.column_config.TextColumn("Mediana NEWS"),
+            "IndiceChoque": st.column_config.NumberColumn("Índice Choque", format="%.2f"),
+            "IndiceRox": st.column_config.NumberColumn("Índice ROX", format="%.2f"),
+            "UltimoSPO2": st.column_config.NumberColumn("SpO2 (%)"),
+            "UltimoFR": st.column_config.TextColumn("FR (rpm)"),
+            "DeltaFR6h": st.column_config.TextColumn("DeltaFR"),
+            "UltimoFC": st.column_config.TextColumn("FC (bpm)"),
+            "DeltaFC6h": st.column_config.TextColumn("DeltaFC"),
+            "UltimoPA": st.column_config.TextColumn("PA Sistólica"),
+            "DeltaPA6h": st.column_config.TextColumn("DeltaPA")
         },
         hide_index=True,
         use_container_width=True,
@@ -160,11 +169,11 @@ if nr_selecionado == "Todos os Pacientes":
             st.rerun()
 
 # =====================================================================
-# MODO 2: VISÃO INDIVIDUAL DO PACIENTE 
+# MODO 2: VISÃO INDIVIDUAL DO PACIENTE (LAYOUT EM CARDS PROFISSIONAIS)
 # =====================================================================
 else:
     # --- NOVO: BOTÃO DE VOLTAR ---
-    if st.button("Voltar para Visão Geral"):
+    if st.button("⬅️ Voltar para Visão Geral"):
         st.session_state['paciente_selecionado'] = "Todos os Pacientes"
         st.rerun()
         
@@ -211,68 +220,13 @@ Conduta:
         file_name=f"Evolutivo_NR_{nr_selecionado}_{data_selecionada[:10].replace('/','-')}.txt", mime="text/plain"
     )
 
-    # Painel Clínico
-    st.subheader(f"Status do Paciente NR: {nr_selecionado} (Último Registro: {data_selecionada})")
-
-
-
-    st.markdown("#### Linha do Tempo de Risco (IA)")
-    fig_linha = go.Figure()
-    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_6h_(%)'], mode='lines+markers', name='Risco 6h', line=dict(color='firebrick', width=2)))
-    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_12h_(%)'], mode='lines+markers', name='Risco 12h', line=dict(color='orange', width=2)))
-    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_18h_(%)'], mode='lines+markers', name='Risco 18h', line=dict(color='teal', width=2)))
-    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_24h_(%)'], mode='lines+markers', name='Risco 24h', line=dict(color='gold', width=2)))
-    fig_linha.add_hline(y=50, line_dash="dot", line_color="gray", annotation_text="Atenção (50%)")
-    fig_linha.add_hline(y=70, line_dash="dot", line_color="red", annotation_text="Crítico (70%)")
-    fig_linha.update_layout(yaxis_title="Probabilidade (%)", hovermode="x unified", height=400, yaxis=dict(range=[-5, 105]))
-    fig_linha.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
-    st.plotly_chart(fig_linha, use_container_width=True)
-
-    col1, col2, col3, col4, col5 = st.columns(5)
-    col1.metric("Mediana NEWS", f"⠀{int(linha_atual['Mediana_News'])}")
+    # =====================================================================
+    # PAINEL CLÍNICO - HIERARQUIA VISUAL
+    # =====================================================================
+    st.markdown(f"## 📊 Painel Clínico Integrado | Paciente: `{nr_selecionado}`")
+    st.caption(f"**Avaliação Referência:** {data_selecionada}")
     
-    # Adicionado o delta com a coluna Spo2_Tendencia
-    col2.metric("Ultima SpO2", f"{linha_atual['UltimoSPO2']}%", delta=f"{linha_atual['Spo2_Tendencia']} (Tendência)")
-    
-    col3.metric("Última Freq. Respiratória", f"{linha_atual['UltimoFR']} rpm", delta=f"{linha_atual['DeltaFR6h']} (Delta últ. 6h)", delta_color="inverse")
-    col4.metric("Última Freq. Cardíaca", f"{linha_atual['UltimoFC']} bpm", delta=f"{linha_atual['DeltaFC6h']} (Delta últ. 6h)", delta_color="inverse")
-    col5.metric("Pressão Sistólica", f"{linha_atual['UltimoPA']} mmHg", delta=f"{linha_atual['DeltaPA6h']} (Delta últ. 6h)", delta_color="inverse")
-
-    st.markdown("<br>", unsafe_allow_html=True) 
-    col6, col7, col8, col9, col10 = st.columns(5)
-    col6.metric("Últ. Temperatura", f"{linha_atual['UltimoTemp']} °C")
-    col7.metric("Índice de Choque", (f"⠀{linha_atual['IndiceChoque']}"),
-    help="Cálculo: Frequência Cardíaca / Pressão Sistólica. Valores acima de 0.8 a 1.0 indicam alto risco de choque hemodinâmico oculto.")
-    col8.metric("Índice ROX", (f"{linha_atual['IndiceRox']}"),
-    help="Mede a capacidade respiratória:  > 4.88 Boa resposta ao Oxigenio | Entre 3.85 e 4.88 Zona de Atenção | < 3.88 Alto Risco de Falha Respiratória.")
-    col9.metric("Mediana Freq. Resp.", f"⠀{linha_atual['Mediana_FR']}")
-    col10.metric("Score Fragilidade", (f"⠀{linha_atual['Score_FragilididadeClinica']}"), 
-    help="""Mede o quão “frágil” o paciente já é antes de piorar. Variáveis:
-- Acamado (Peso 3)
-- Consciência Sustentada (quanto pior a cognição basal → maior fragilidade)
-- IdadeNormalizada 0-1 (Peso 2.5)
-- Comorbidades: DNG, IC e CA (Peso 2) | DM (Peso 1.5) | HAS (Peso 0.5)
-
-SCORE TOTAL: 0 - 2 Baixa Fragilidadde | 2 - 5 Moderada | 5 - 8 Alta | Maior ou igual a 8 Alta Fragilidade
-""")
-
-    st.markdown("<br>", unsafe_allow_html=True) 
-    
-    # --- TERCEIRA LINHA (NOVOS DADOS DE TENDÊNCIA) ---
-    col11, col12, col13, col14, col15 = st.columns(5)
-    # Adicionei "h" imaginando que o tempo é em horas e "rpm" na FR. Se for diferente no seu banco, é só apagar a letra!
-    col15.metric("Aceleração NEWS", f"⠀{linha_atual['NewsAceleracao']}")
-    col11.metric("Tendência NEWS", (f"⠀{linha_atual['News_Tendencia']}"),
-    help="Direção para onde o quadro clínico geral está caminhando (melhorando:-1, piorando:1 ou estável:0).")             
-    col12.metric("Tempo NEWS Alto", (f"⠀{linha_atual['Tempo_NewsAlto']} h"),
-    help="Quantidade total de horas consecutivas que este paciente permaneceu na zona de perigo do protocolo NEWS. News maior ou igual a 6") 
-    col13.metric("Volatilidade NEWS", (f"⠀{linha_atual['News_Volatilidade']}"),
-    help="É o desvio padrão dos valores do NEWS. 0 - Sem piora |  1 - 2 Algumas pioras | Maior ou igual a 3 Piora Sustentada/instabilidade")            
-    col14.metric("Piora Sustentada NEWS (Degrau)", (f"⠀⠀{linha_atual['News_PioraSustentadaDegrau']}"),
-    help="Conta quantos aumentos consecutivos aconteceram no NEWS. 0 - 1 Estável |  1 - 2 Oscilação Moderada | > 2 Alta instabilidade") 
-
-    # Sistema de Alertas
-    st.markdown("---")
+    # 1. SISTEMA DE ALERTAS (Topo para destaque imediato)
     alertas_ativos = []
     if linha_atual.get('Consciencia_Sustentada', 0) > 0: alertas_ativos.append("🧠 Queda de Consciência Prolongada")
     if linha_atual.get('Hipotensao_Sustentada', 0) > 0: alertas_ativos.append("🩸 Hipotensão Sustentada")
@@ -281,86 +235,147 @@ SCORE TOTAL: 0 - 2 Baixa Fragilidadde | 2 - 5 Moderada | 5 - 8 Alta | Maior ou i
     if linha_atual.get('FebreSustentada', 0) > 0: alertas_ativos.append("🤒 Febre Sustentada")
 
     if alertas_ativos:
-        for alerta in alertas_ativos:
-            st.error(f"**ALERTA ATIVO NESTE MOMENTO:** {alerta}")
+        with st.container(border=True):
+            st.error("**⚠️ ALERTAS ATIVOS NESTE MOMENTO:**")
+            cols_alerta = st.columns(len(alertas_ativos))
+            for i, alerta in enumerate(alertas_ativos):
+                cols_alerta[i].write(alerta)
         
     if pd.notna(linha_atual['Causas_Suspeitas']) and linha_atual['Causas_Suspeitas'] != "Sem Causa Específica":
         st.warning(f"**SUSPEITA DA IA:** O modelo detectou características de **{linha_atual['Causas_Suspeitas']}**.")
 
-    # Velocímetros de Risco
-    st.subheader("🤖 Previsão de Risco (Machine Learning)")
-    col_r1, col_r2, col_r3, col_r4 = st.columns(4)
-
-    def criar_velocimetro(valor, titulo, lim_atencao, lim_critico):
-        cor_segura = "#10B981"  
-        cor_atencao = "#F59E0B" 
-        cor_critica = "#EF4444" 
-
-        fig = go.Figure(go.Indicator(
-            mode = "gauge+number", value = valor,
-            title = {'text': f"<span style='font-size: 22px; font-weight: bold;'>{titulo}</span>"},
-            number = {'suffix': "%", 'font': {'size': 38}},
-            gauge = {
-                'axis': {'range': [0, 100], 'tickwidth': 2, 'tickcolor': "#374151"},
-                'bar': {'color': "rgba(0,0,0,0)"},
-                'bgcolor': "white", 'borderwidth': 1, 'bordercolor': "#374151",
-                'steps': [
-                    {'range': [0, lim_atencao], 'color': cor_segura},
-                    {'range': [lim_atencao, lim_critico], 'color': cor_atencao},
-                    {'range': [lim_critico, 100], 'color': cor_critica}
-                ],
-                'threshold': {'line': {'color': "white", 'width': 8}, 'thickness': 0.9, 'value': valor}
-            }
-        ))
-        fig.update_layout(height=280, margin=dict(l=15, r=15, t=40, b=15), paper_bgcolor="rgba(0,0,0,0)", font={'color': "#D1D5DB"})
-        return fig
-
-    col_r1.plotly_chart(criar_velocimetro(linha_atual['Deterioracao_6h_(%)'], "Risco em 6h", 30, 45), use_container_width=True)
-    col_r2.plotly_chart(criar_velocimetro(linha_atual['Deterioracao_12h_(%)'], "Risco em 12h", 45, 60), use_container_width=True)
-    col_r3.plotly_chart(criar_velocimetro(linha_atual['Deterioracao_18h_(%)'], "Risco em 18h", 50, 70), use_container_width=True)
-    col_r4.plotly_chart(criar_velocimetro(linha_atual['Deterioracao_24h_(%)'], "Risco em 24h", 50, 70), use_container_width=True)
-
-    with st.expander("🔍 Por que a IA tomou essa decisão? (Fatores de Risco)"):
-        st.markdown("Baseado na avaliação em tempo real, os parâmetros abaixo foram os **principais responsáveis** por aumentar o risco atual do paciente:")
-        fatores_peso = []
-        def pega_valor(coluna, padrao=0.0):
-            val = linha_atual.get(coluna, padrao)
-            if pd.isna(val): return padrao
-            try: return float(str(val))
-            except: return padrao
-                
-        risco_6h = pega_valor('Deterioracao_6h_(%)')
-        risco_12h = pega_valor('Deterioracao_12h_(%)')
-        risco_18h = pega_valor('Deterioracao_18h_(%)')
-        risco_24h = pega_valor('Deterioracao_24h_(%)')
+    # 2. BLOCO DE PREVISÃO DA IA E LINHA DO TEMPO (Movido para o Topo)
+    st.markdown("### 🤖 Previsão de Risco e Trajetória (Machine Learning)")
+    with st.container(border=True):
         
-        if risco_6h >= 45.0: fatores_peso.append(f"**🚨 Alerta Imediato (6h = {risco_6h}%):** Ultrapassou o limiar crítico de 45.0%. A IA detectou sinais agudos de colapso.")
-        if risco_12h >= 60.0: fatores_peso.append(f"**⚠️ Alerta Curto Prazo (12h = {risco_12h}%):** Ultrapassou o limiar de 60.0%. Indicativo de instabilidade se a conduta não for alterada.")
-        if risco_18h >= 70.0: fatores_peso.append(f"**⚠️ Alerta Médio Prazo (18h = {risco_18h}%):** Ultrapassou o limiar de 70.0%.")
-        if risco_24h >= 70.0: fatores_peso.append(f"**📉 Risco de Tendência (24h = {risco_24h}%):** Ultrapassou o limiar de 70.0%. O padrão aponta para falência sistêmica amanhã.")
+        # 2.1 Velocímetros
+        col_r1, col_r2, col_r3, col_r4 = st.columns(4)
 
-        if pega_valor('IndiceChoque') >= 0.8: fatores_peso.append(f"**Esforço Hemodinâmico (Índice de Choque: {pega_valor('IndiceChoque')}):** Coração acelerado em relação à pressão (Normal < 0.8).")
-        if pega_valor('IndiceRox', 10) <= 8.0: fatores_peso.append(f"**Alerta Respiratório (Índice ROX: {pega_valor('IndiceRox')}):** Piora na troca de oxigênio.")
-        if pega_valor('Mediana_News') >= 5: fatores_peso.append(f"**Score NEWS-2 de Atenção ({int(pega_valor('Mediana_News'))}):** Sinais vitais atingiram protocolo de risco.")
-        if pega_valor('UltimoSPO2', 100) < 93: fatores_peso.append(f"**Dessaturação (SpO2: {pega_valor('UltimoSPO2')}%):** Oxigênio no sangue abaixo da margem de segurança.")
-        if pega_valor('UltimoTemp', 36) > 37.8: fatores_peso.append(f"**Pico Febril Recente ({pega_valor('UltimoTemp')}°C):** Sugere possível resposta inflamatória/infecciosa.")
+        def criar_velocimetro(valor, titulo, lim_atencao, lim_critico):
+            cor_segura = "#10B981"  
+            cor_atencao = "#F59E0B" 
+            cor_critica = "#EF4444" 
+
+            fig = go.Figure(go.Indicator(
+                mode = "gauge+number", value = valor,
+                title = {'text': f"<span style='font-size: 20px; font-weight: bold;'>{titulo}</span>"},
+                number = {'suffix': "%", 'font': {'size': 32}},
+                gauge = {
+                    'axis': {'range': [0, 100], 'tickwidth': 2, 'tickcolor': "#374151"},
+                    'bar': {'color': "rgba(0,0,0,0)"},
+                    'bgcolor': "white", 'borderwidth': 1, 'bordercolor': "#374151",
+                    'steps': [
+                        {'range': [0, lim_atencao], 'color': cor_segura},
+                        {'range': [lim_atencao, lim_critico], 'color': cor_atencao},
+                        {'range': [lim_critico, 100], 'color': cor_critica}
+                    ],
+                    'threshold': {'line': {'color': "white", 'width': 8}, 'thickness': 0.9, 'value': valor}
+                }
+            ))
+            fig.update_layout(height=220, margin=dict(l=15, r=15, t=40, b=10), paper_bgcolor="rgba(0,0,0,0)", font={'color': "#D1D5DB"})
+            return fig
+
+        col_r1.plotly_chart(criar_velocimetro(linha_atual['Deterioracao_6h_(%)'], "Risco em 6h", 30, 45), use_container_width=True)
+        col_r2.plotly_chart(criar_velocimetro(linha_atual['Deterioracao_12h_(%)'], "Risco em 12h", 45, 60), use_container_width=True)
+        col_r3.plotly_chart(criar_velocimetro(linha_atual['Deterioracao_18h_(%)'], "Risco em 18h", 50, 70), use_container_width=True)
+        col_r4.plotly_chart(criar_velocimetro(linha_atual['Deterioracao_24h_(%)'], "Risco em 24h", 50, 70), use_container_width=True)
+
+        # 2.2 Fatores de Risco
+        with st.expander("🔍 Por que a IA tomou essa decisão? (Ver Fatores de Risco)"):
+            fatores_peso = []
+            def pega_valor(coluna, padrao=0.0):
+                val = linha_atual.get(coluna, padrao)
+                if pd.isna(val): return padrao
+                try: return float(str(val))
+                except: return padrao
+                    
+            risco_6h = pega_valor('Deterioracao_6h_(%)')
+            risco_12h = pega_valor('Deterioracao_12h_(%)')
+            risco_18h = pega_valor('Deterioracao_18h_(%)')
+            risco_24h = pega_valor('Deterioracao_24h_(%)')
             
-        if fatores_peso:
-            for fator in fatores_peso: st.warning(f"{fator}")
-        else:
-            st.success("✅ No momento selecionado, os parâmetros vitais estão compensados.")
+            if risco_6h >= 45.0: fatores_peso.append(f"**🚨 Alerta Imediato (6h = {risco_6h}%):** Ultrapassou o limiar crítico de 45.0%. Sinais agudos de colapso.")
+            if risco_12h >= 60.0: fatores_peso.append(f"**⚠️ Alerta Curto Prazo (12h = {risco_12h}%):** Ultrapassou o limiar de 60.0%. Indicativo de instabilidade.")
+            if risco_18h >= 70.0: fatores_peso.append(f"**⚠️ Alerta Médio Prazo (18h = {risco_18h}%):** Ultrapassou o limiar de 70.0%.")
+            if risco_24h >= 70.0: fatores_peso.append(f"**📉 Risco de Tendência (24h = {risco_24h}%):** Ultrapassou 70.0%. Padrão aponta falência sistêmica.")
+
+            if pega_valor('IndiceChoque') >= 0.8: fatores_peso.append(f"**Esforço Hemodinâmico (Índice de Choque: {pega_valor('IndiceChoque')}):** Coração acelerado (Normal < 0.8).")
+            if pega_valor('IndiceRox', 10) <= 8.0: fatores_peso.append(f"**Alerta Respiratório (Índice ROX: {pega_valor('IndiceRox')}):** Piora na troca de oxigênio.")
+            if pega_valor('Mediana_News') >= 5: fatores_peso.append(f"**Score NEWS-2 ({int(pega_valor('Mediana_News'))}):** Sinais vitais atingiram protocolo de risco.")
+            if pega_valor('UltimoSPO2', 100) < 93: fatores_peso.append(f"**Dessaturação (SpO2: {pega_valor('UltimoSPO2')}%):** Oxigênio abaixo da margem de segurança.")
+            if pega_valor('UltimoTemp', 36) > 37.8: fatores_peso.append(f"**Pico Febril ({pega_valor('UltimoTemp')}°C):** Possível resposta inflamatória.")
+                
+            if fatores_peso:
+                for fator in fatores_peso: st.markdown(f"- {fator}")
+            else:
+                st.success("✅ Parâmetros vitais compensados.")
+
+        # 2.3 Linha do Tempo Panorâmica (Todo o dataframe + RangeSlider)
+        st.markdown("<br><b>Visão Panorâmica do Risco (Histórico Completo)</b>", unsafe_allow_html=True)
+        fig_linha = go.Figure()
+        fig_linha.add_trace(go.Scatter(x=df_paciente['DATA_REFERENCIA'], y=df_paciente['Deterioracao_6h_(%)'], mode='lines+markers', name='Risco 6h', line=dict(color='firebrick', width=2)))
+        fig_linha.add_trace(go.Scatter(x=df_paciente['DATA_REFERENCIA'], y=df_paciente['Deterioracao_12h_(%)'], mode='lines+markers', name='Risco 12h', line=dict(color='orange', width=2)))
+        fig_linha.add_trace(go.Scatter(x=df_paciente['DATA_REFERENCIA'], y=df_paciente['Deterioracao_18h_(%)'], mode='lines+markers', name='Risco 18h', line=dict(color='teal', width=2)))
+        fig_linha.add_trace(go.Scatter(x=df_paciente['DATA_REFERENCIA'], y=df_paciente['Deterioracao_24h_(%)'], mode='lines+markers', name='Risco 24h', line=dict(color='gold', width=2)))
+        fig_linha.add_hline(y=50, line_dash="dot", line_color="gray", annotation_text="Atenção (50%)")
+        fig_linha.add_hline(y=70, line_dash="dot", line_color="red", annotation_text="Crítico (70%)")
+        
+        # Adiciona o range slider no eixo X nativamente via plotly
+        fig_linha.update_layout(
+            yaxis_title="Probabilidade (%)", 
+            hovermode="x unified", 
+            height=350, 
+            margin=dict(t=10, b=10),
+            yaxis=dict(range=[-5, 105]),
+            xaxis=dict(
+                rangeslider=dict(visible=True), 
+                type="date"
+            )
+        )
+        st.plotly_chart(fig_linha, use_container_width=True)
+
+    # 3. BLOCOS DE DADOS CLÍNICOS (Cards Separados)
+    st.markdown("### 🫀 Avaliação Clínica")
+    
+    with st.container(border=True):
+        st.markdown("**Sinais Vitais Essenciais**")
+        col1, col2, col3, col4, col5, col6 = st.columns(6)
+        col1.metric("Mediana NEWS", f"⠀{int(linha_atual['Mediana_News'])}")
+        col2.metric("Ultima SpO2", f"{linha_atual['UltimoSPO2']}%", delta=f"{linha_atual['Spo2_Tendencia']} (Tendência)")
+        col3.metric("Últ. Freq. Respiratória", f"{linha_atual['UltimoFR']} rpm", delta=f"{linha_atual['DeltaFR6h']} (Delta 6h)", delta_color="inverse")
+        col4.metric("Últ. Freq. Cardíaca", f"{linha_atual['UltimoFC']} bpm", delta=f"{linha_atual['DeltaFC6h']} (Delta 6h)", delta_color="inverse")
+        col5.metric("Pressão Sistólica", f"{linha_atual['UltimoPA']} mmHg", delta=f"{linha_atual['DeltaPA6h']} (Delta 6h)", delta_color="inverse")
+        col6.metric("Últ. Temperatura", f"{linha_atual['UltimoTemp']} °C")
+
+    with st.container(border=True):
+        st.markdown("**Índices Preditivos e Fragilidade**")
+        col7, col8, col9, col10 = st.columns(4)
+        col7.metric("Índice de Choque", f"⠀{linha_atual['IndiceChoque']}", help="Normal < 0.8. Alto risco de choque se maior.")
+        col8.metric("Índice ROX", f"{linha_atual['IndiceRox']}", help="> 4.88 Boa resposta | < 3.88 Alto Risco Intubação")
+        col9.metric("Mediana Freq. Resp.", f"⠀{linha_atual['Mediana_FR']}")
+        col10.metric("Score Fragilidade", f"⠀{linha_atual['Score_FragilididadeClinica']}", help="0-2 Baixa | 2-5 Moderada | >5 Alta/Grave")
+
+    with st.container(border=True):
+        st.markdown("**Análise de Tendência e Estabilidade do NEWS**")
+        col11, col12, col13, col14, col15 = st.columns(5)
+        col11.metric("Aceleração NEWS", f"⠀{linha_atual['NewsAceleracao']}")
+        col12.metric("Tendência NEWS", f"⠀{linha_atual['News_Tendencia']}", help="Melhorando: -1 | Piorando: 1 | Estável: 0")             
+        col13.metric("Tempo NEWS Alto", f"⠀{linha_atual['Tempo_NewsAlto']} h", help="Horas consecutivas na zona de perigo (>=6).") 
+        col14.metric("Volatilidade NEWS", f"⠀{linha_atual['News_Volatilidade']}", help="Desvio padrão. >= 3 indica Piora Sustentada.")            
+        col15.metric("Degrau (Sustentado)", f"⠀⠀{linha_atual['News_PioraSustentadaDegrau']}", help="Aumentos consecutivos. >2 Alta instabilidade.") 
+
 
     # =====================================================================
-    # LÓGICA DE PAGINAÇÃO (SLIDER PARA OS GRÁFICOS)
+    # 4. LÓGICA DE PAGINAÇÃO (SLIDER PARA OS GRÁFICOS DETALHADOS)
     # =====================================================================
     st.markdown("---")
-    st.subheader("📈 Trajetória Clínica e Sinais Vitais (Interativo)")
+    st.markdown("### 📈 Detalhamento Histórico Focado (Janela de Tempo)")
 
     total_registos = len(df_paciente)
     tamanho_janela = 45 
 
     if total_registos > tamanho_janela:
-        st.info(f"O paciente tem **{total_registos}** registros. Utilize a barra abaixo para viajar no tempo (exibindo 15 pontos de cada vez).")
+        st.info(f"O paciente tem **{total_registos}** registros. Utilize a barra abaixo para viajar no tempo nesta visão detalhada de 45 pontos.")
         inicio = st.slider(
             "Navegar no histórico:", 
             min_value=0, 
@@ -373,38 +388,10 @@ SCORE TOTAL: 0 - 2 Baixa Fragilidadde | 2 - 5 Moderada | 5 - 8 Alta | Maior ou i
         df_plot = df_paciente
 
     # =====================================================================
-    # GRÁFICOS INTERATIVOS
+    # GRÁFICOS INTERATIVOS PAGINADOS
     # =====================================================================
-
-    st.markdown("#### 1. Linha do Tempo de Risco (IA)")
-    fig_linha = go.Figure()
-    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_6h_(%)'], mode='lines+markers', name='Risco 6h', line=dict(color='firebrick', width=2)))
-    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_12h_(%)'], mode='lines+markers', name='Risco 12h', line=dict(color='orange', width=2)))
-    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_18h_(%)'], mode='lines+markers', name='Risco 18h', line=dict(color='teal', width=2)))
-    fig_linha.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Deterioracao_24h_(%)'], mode='lines+markers', name='Risco 24h', line=dict(color='gold', width=2)))
-    fig_linha.add_hline(y=50, line_dash="dot", line_color="gray", annotation_text="Atenção (50%)")
-    fig_linha.add_hline(y=70, line_dash="dot", line_color="red", annotation_text="Crítico (70%)")
-    fig_linha.update_layout(yaxis_title="Probabilidade (%)", hovermode="x unified", height=400, yaxis=dict(range=[-5, 105]))
-    fig_linha.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
-    st.plotly_chart(fig_linha, use_container_width=True)
-
-    # --- NOVO GRÁFICO ACRESCENTADO AQUI ---
-    st.markdown("#### 2. Evolução do Score NEWS Pontual (Bruto)")
-    fig_news_pontual = go.Figure()
-    # Usamos uma cor forte e distinta, como magenta, para o NEWS bruto
-    fig_news_pontual.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoNews'], mode='lines+markers', name='NEWS Pontual', line=dict(color='magenta', width=3)))
     
-    # Adicionamos as linhas de referência do protocolo NEWS
-    fig_news_pontual.add_hline(y=5, line_dash="dot", line_color="orange", annotation_text="Atenção (NEWS >= 5)")
-    fig_news_pontual.add_hline(y=7, line_dash="dot", line_color="red", annotation_text="Crítico (NEWS >= 7)")
-    
-    fig_news_pontual.update_layout(yaxis_title="Score NEWS", hovermode="x unified", height=300) # Altura menor, similar à temperatura
-    fig_news_pontual.update_yaxes(range=[0, 20]) # Define a amplitude do NEWS (tipicamente vai de 0 a ~20)
-    fig_news_pontual.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
-    st.plotly_chart(fig_news_pontual, use_container_width=True)
-    # -------------------------------------
-    
-    st.markdown("#### 3. Evolução dos Sinais Vitais Essenciais")
+    st.markdown("#### 1. Evolução dos Sinais Vitais Essenciais")
     fig_vitais = go.Figure()
     fig_vitais.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoFC'], mode='lines+markers', name='Frequência Cardíaca (bpm)', line=dict(color='red')))
     fig_vitais.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoPA'], mode='lines+markers', name='Pressão Sistólica (mmHg)', line=dict(color='blue')))
@@ -413,7 +400,17 @@ SCORE TOTAL: 0 - 2 Baixa Fragilidadde | 2 - 5 Moderada | 5 - 8 Alta | Maior ou i
     fig_vitais.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
     st.plotly_chart(fig_vitais, use_container_width=True)
 
-    st.markdown("#### 4. Curva Térmica (Temperatura)")
+    st.markdown("#### 2. Evolução do Score NEWS Pontual (Bruto)")
+    fig_news_pontual = go.Figure()
+    fig_news_pontual.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoNews'], mode='lines+markers', name='NEWS Pontual', line=dict(color='magenta', width=3)))
+    fig_news_pontual.add_hline(y=5, line_dash="dot", line_color="orange", annotation_text="Atenção (NEWS >= 5)")
+    fig_news_pontual.add_hline(y=7, line_dash="dot", line_color="red", annotation_text="Crítico (NEWS >= 7)")
+    fig_news_pontual.update_layout(yaxis_title="Score NEWS", hovermode="x unified", height=300)
+    fig_news_pontual.update_yaxes(range=[0, 20])
+    fig_news_pontual.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
+    st.plotly_chart(fig_news_pontual, use_container_width=True)
+
+    st.markdown("#### 3. Curva Térmica (Temperatura)")
     fig_temp = go.Figure()
     fig_temp.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoTemp'], mode='lines+markers', name='Temperatura (°C)', line=dict(color='darkorange', width=3)))
     fig_temp.add_hline(y=37.8, line_dash="dot", line_color="red", annotation_text="Pico Febril (37.8°C)")
@@ -422,6 +419,24 @@ SCORE TOTAL: 0 - 2 Baixa Fragilidadde | 2 - 5 Moderada | 5 - 8 Alta | Maior ou i
     fig_temp.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
     st.plotly_chart(fig_temp, use_container_width=True)
 
-    
+    st.markdown("#### 4. Índices Preditivos: Choque Hemodinâmico vs Risco de Intubação (ROX)")
+    fig_indices = make_subplots(specs=[[{"secondary_y": True}]])
+    fig_indices.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['IndiceChoque'], mode='lines+markers', name='Índice de Choque', line=dict(color='red', width=3)), secondary_y=False)
+    fig_indices.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['IndiceRox'], mode='lines+markers', name='Índice ROX', line=dict(color='green', dash='dash', width=3)), secondary_y=True)
+    fig_indices.update_layout(hovermode="x unified", height=400)
+    fig_indices.update_yaxes(title_text="Índice de Choque", secondary_y=False, color="red")
+    fig_indices.update_yaxes(title_text="Índice ROX", secondary_y=True, color="green")
+    fig_indices.add_hline(y=1.0, line_dash="dot", line_color="darkred", annotation_text="Risco Choque (>1.0)", secondary_y=False)
+    fig_indices.add_hline(y=4.88, line_dash="dot", line_color="darkgreen", annotation_text="Risco Intubação ROX (<4.88)", secondary_y=True)
+    fig_indices.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
+    st.plotly_chart(fig_indices, use_container_width=True)
 
-    
+    st.markdown("#### 5. Risco Clínico Protocolar vs Saturação de Oxigênio")
+    fig_news = make_subplots(specs=[[{"secondary_y": True}]])
+    fig_news.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['Mediana_News'], mode='lines+markers', name='NEWS (Mediana)', line=dict(color='purple', width=3)), secondary_y=False)
+    fig_news.add_trace(go.Scatter(x=df_plot['DATA_REFERENCIA'], y=df_plot['UltimoSPO2'], mode='lines+markers', name='SpO2 (%)', line=dict(color='cyan', dash='dash', width=3)), secondary_y=True)
+    fig_news.update_layout(hovermode="x unified", height=400)
+    fig_news.update_yaxes(title_text="Mediana Score NEWS", secondary_y=False, color="purple")
+    fig_news.update_yaxes(title_text="SpO2 (%)", secondary_y=True, color="cyan")
+    fig_news.update_xaxes(tickmode='array', tickvals=df_plot['DATA_REFERENCIA'], ticktext=df_plot['DATA_REFERENCIA'].dt.strftime('%d/%m %H:%M'), tickangle=-45)
+    st.plotly_chart(fig_news, use_container_width=True)
